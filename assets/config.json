@@ -1,0 +1,27 @@
+{
+    "name":"tucao",
+    "domain":"www.tucao.cfd",
+    "protocol":"https",
+    "proxy":"",
+    "channels":{
+      "新番":{
+        "index":"11"
+      },
+      "动画":{
+        "index":"19"
+      },
+      "音乐":{
+        "index":"20"
+      },
+      "游戏":{
+        "index":"21"
+      },
+      "三次元":{
+        "index":"22"
+      },
+      "影剧":{
+        "index":"23"
+      }
+    },
+    "key":"25tids8f1ew1821ed"
+  }
