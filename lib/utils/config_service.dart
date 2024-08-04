@@ -67,4 +67,12 @@ class ConfigService {
   void setProxyVideo(bool proxyVideo) {
     _box.put("proxyVideo", proxyVideo);
   }
+
+  String getChapterResult(){
+    return _box.get("chapterResult",defaultValue:Global.siteConfig!['chapterResult']);
+  }
+
+  void setChapterResult(String chapterResult){
+    _box.put("chapterResult",chapterResult);
+  }
 }

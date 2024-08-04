@@ -56,6 +56,8 @@ dependencies:
   isar_flutter_libs: ^4.0.0-dev.13
   path_provider: ^2.1.0
   flutter_cache_manager: ^3.4.0
+  xpath_selector: ^3.0.2
+  xpath_selector_html_parser: ^3.0.1
 
 
 dev_dependencies:

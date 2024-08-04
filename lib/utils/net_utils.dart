@@ -16,8 +16,10 @@ class NetUtils {
   static NetUtils? get instance => _getInstance();
   static NetUtils? _instance;
 
-  String _baseUrlConifg =
-      "${Global.siteConfig!['protocol']}://${ConfigService().getDomain()}/api_v2/";
+  String _baseUrlDomain =
+      "${Global.siteConfig!['protocol']}://${ConfigService().getDomain()}";
+
+  String get _baseUrlConifg => "$_baseUrlDomain/api_v2/";
 
   NetUtils._internal() {
     // 初始化
@@ -29,9 +31,8 @@ class NetUtils {
     return _instance;
   }
 
-  set baseUrlConfig(String newBaseUrlConfig) {
-    _baseUrlConifg =
-        "${Global.siteConfig!['protocol']}://$newBaseUrlConfig/api_v2/";
+  set baseUrlDomain(String newbaseUrlDomain) {
+    _baseUrlDomain = "${Global.siteConfig!['protocol']}://$newbaseUrlDomain";
   }
 
   init() {
@@ -139,7 +140,20 @@ class NetUtils {
 
   Future<String> getDanmaku(String hid, String part) async {
     final response = await _dio.get(
-        "${Global.siteConfig!['protocol']}://${ConfigService().getDomain()}/index.php?m=mukio&c=index&a=init&playerID=11-$hid-1-$part");
+        "$_baseUrlDomain/index.php?m=mukio&c=index&a=init&playerID=11-$hid-1-$part");
     return response.toString();
+  }
+
+  Future<Map<String, dynamic>> getComment(String typeId, String hid,
+      {String part = "1 ", String page = "1"}) async {
+    final response = await _dio.get(
+        "$_baseUrlDomain/index.php?m=comment&c=index&a=ajax&commentid=content_$typeId-$hid-$part&page=$page");
+
+    return parseJson(response.toString());
+  }
+
+  Future<String> getHtmlStringByHid(String hid) async {
+    final response = await _dio.get("$_baseUrlDomain/play/h$hid/");
+    return response.data.toString();
   }
 }

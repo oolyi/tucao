@@ -176,6 +176,7 @@ class VideoPlayerController extends GetxController {
   @override
   void onClose() {
     playerTimer?.cancel();
+    positionedTimer?.cancel();
     player.dispose();
     super.onClose();
   }

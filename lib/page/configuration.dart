@@ -123,7 +123,7 @@ class ConfigPage extends GetView<ConfigController> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (controller.formKey.currentState!.validate()) {
-                      NetUtils().baseUrlConfig =
+                      NetUtils().baseUrlDomain  =
                           controller.domainTextController.text;
                       ConfigService()
                           .setDomain(controller.domainTextController.text);
