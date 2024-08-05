@@ -16,10 +16,13 @@ class PlayerView extends GetView<VideoPlayerController> {
     return Obx(() {
       final androidFullscreen = controller.androidFullscreen.value;
       final screenSize = MediaQuery.of(context).size;
-      final videoHeight =
-          androidFullscreen ? screenSize.height : screenSize.width * 9.0 / 16.0;
+
       final videoWidth =
           androidFullscreen ? screenSize.width : screenSize.width;
+      final videoHeight = androidFullscreen
+          ? screenSize.height
+          : screenSize.width / controller.aspectRatio.value;
+
       return Center(
         child: SizedBox(
           width: videoWidth,
@@ -43,122 +46,116 @@ class PlayerView extends GetView<VideoPlayerController> {
                   height: double.infinity,
                 ),
               ),
-              Obx(() {
-                return (controller.showPositioned.value ||
-                        !controller.playing.value)
-                    ? Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: Row(
-                          children: [
-                            IconButton(
-                              color: Colors.white,
-                              icon: const Icon(Icons.arrow_back),
-                              onPressed: () {
-                                if (controller.androidFullscreen.value) {
-                                  controller.exitFullScreen();
-                                } else {
-                                  Get.back();
-                                }
-                              },
+              (controller.showPositioned.value || !controller.playing.value)
+                  ? Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            color: Colors.white,
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () {
+                              if (controller.androidFullscreen.value) {
+                                controller.exitFullScreen();
+                              } else {
+                                Get.back();
+                              }
+                            },
+                          ),
+                          const Expanded(child: SizedBox(height: 40)),
+                          TextButton(
+                            style: ButtonStyle(
+                              padding: WidgetStateProperty.all(EdgeInsets.zero),
                             ),
-                            const Expanded(child: SizedBox(height: 40)),
-                            TextButton(
-                              style: ButtonStyle(
-                                padding:
-                                    WidgetStateProperty.all(EdgeInsets.zero),
-                              ),
-                              onPressed: () {
-                                showSetSpeedSheet();
-                              },
-                              child: Text(
-                                '${controller.playerSpeed}X',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
+                            onPressed: () {
+                              showSetSpeedSheet();
+                            },
+                            child: Text(
+                              '${controller.playerSpeed}X',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
                               ),
                             ),
-                          ],
-                        ),
-                      )
-                    : Container();
-              }),
-              Obx(() {
-                // 自定义播放器底部组件
-                return (controller.showPositioned.value ||
-                        !controller.playing.value)
-                    ? Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Row(
-                          children: [
-                            IconButton(
-                              color: Colors.white,
-                              icon: Icon(controller.playing.value
-                                  ? Icons.pause
-                                  : Icons.play_arrow),
-                              onPressed: () async {
-                                await controller.playOrPause();
+                          ),
+                        ],
+                      ),
+                    )
+                  : Container(),
+
+              // 自定义播放器底部组件
+              (controller.showPositioned.value || !controller.playing.value)
+                  ? Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            color: Colors.white,
+                            icon: Icon(controller.playing.value
+                                ? Icons.pause
+                                : Icons.play_arrow),
+                            onPressed: () async {
+                              await controller.playOrPause();
+                            },
+                          ),
+                          Expanded(
+                            child: ProgressBar(
+                              timeLabelLocation: TimeLabelLocation.none,
+                              progress: controller.currentPosition.value,
+                              buffered: controller.buffered.value,
+                              total: controller.duration.value,
+                              onSeek: (duration) {
+                                controller.videoController.player
+                                    .seek(duration);
                               },
                             ),
-                            Expanded(
-                              child: ProgressBar(
-                                timeLabelLocation: TimeLabelLocation.none,
-                                progress: controller.currentPosition.value,
-                                buffered: controller.buffered.value,
-                                total: controller.duration.value,
-                                onSeek: (duration) {
-                                  controller.videoController.player
-                                      .seek(duration);
-                                },
-                              ),
-                            ),
-                            !controller.androidFullscreen.value
-                                ? Container()
-                                : Container(
-                                    padding: const EdgeInsets.only(left: 10.0),
-                                    child: Text(
-                                      "${Utils.durationToString(controller.currentPosition.value)}/${Utils.durationToString(controller.duration.value)}",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16.0,
-                                      ),
+                          ),
+                          !controller.androidFullscreen.value
+                              ? Container()
+                              : Container(
+                                  padding: const EdgeInsets.only(left: 10.0),
+                                  child: Text(
+                                    "${Utils.durationToString(controller.currentPosition.value)}/${Utils.durationToString(controller.duration.value)}",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16.0,
                                     ),
                                   ),
-                            IconButton(
-                              color: Colors.white,
-                              icon: Icon(controller.danmakuOn.value
-                                  ? Icons.comment
-                                  : Icons.comments_disabled),
-                              onPressed: () {
-                                if (controller.danmakuOn.value) {
-                                  controller.danmakuController.clear();
-                                }
-                                controller.danmakuOn.value =
-                                    !controller.danmakuOn.value;
-                              },
-                            ),
-                            IconButton(
-                              color: Colors.white,
-                              icon: Icon(controller.androidFullscreen.value
-                                  ? Icons.fullscreen_exit
-                                  : Icons.fullscreen),
-                              onPressed: () {
-                                if (controller.androidFullscreen.value) {
-                                  controller.exitFullScreen();
-                                } else {
-                                  controller.enterFullScreen();
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      )
-                    : Container();
-              }),
+                                ),
+                          IconButton(
+                            color: Colors.white,
+                            icon: Icon(controller.danmakuOn.value
+                                ? Icons.comment
+                                : Icons.comments_disabled),
+                            onPressed: () {
+                              if (controller.danmakuOn.value) {
+                                controller.danmakuController.clear();
+                              }
+                              controller.danmakuOn.value =
+                                  !controller.danmakuOn.value;
+                            },
+                          ),
+                          IconButton(
+                            color: Colors.white,
+                            icon: Icon(controller.androidFullscreen.value
+                                ? Icons.fullscreen_exit
+                                : Icons.fullscreen),
+                            onPressed: () {
+                              if (controller.androidFullscreen.value) {
+                                controller.exitFullScreen();
+                              } else {
+                                controller.enterFullScreen();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                  : Container(),
             ],
           ),
         ),

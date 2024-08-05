@@ -30,80 +30,78 @@ class VideoListView extends StatelessWidget {
             child: Text(
                 'Error: ${channelController.items.firstWhere((item) => item.containsKey("error"))["error"]}'));
       }
+
       return EasyRefresh(
         onRefresh: channelController.onRefresh,
         onLoad: channelController.onLoad,
         controller: channelController.refreshController,
-        child: CustomScrollView(slivers: [
-          (channelController.items.any((item) => item.containsKey("noData")))
-              ? const SliverFillRemaining(
-                  child: Center(child: Text('No data')),
-                )
-              : SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (BuildContext context, int index) {
-                      return MasonryGridView.count(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 4.0,
-                        crossAxisSpacing: 4.0,
-                        controller: channelController.scrollController,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: channelController.items.length,
-                        itemBuilder: (context, index) {
-                          final item = channelController.items[index];
-                          final imageUrl = item["thumb"];
-                          final title = item["title"];
-                          return GestureDetector(
-                            onTap: () {
-                              Get.toNamed(
-                                '/detail',
-                                arguments: item,
+        child: CustomScrollView(
+          slivers: [
+            if (channelController.items.any((item) => item.containsKey("noData")))
+              const SliverFillRemaining(
+                child: Center(child: Text('No data')),
+              )
+            else
+              SliverToBoxAdapter(
+                child: MasonryGridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 4.0,
+                  crossAxisSpacing: 4.0,
+                  controller: channelController.scrollController,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: channelController.items.length,
+                  itemBuilder: (context, index) {
+                    final item = channelController.items[index];
+                    final imageUrl = item["thumb"];
+                    final title = item["title"];
+                    return GestureDetector(
+                      onTap: () {
+                        Get.toNamed(
+                          '/detail',
+                          arguments: item,
+                        );
+                      },
+                      child: FutureBuilder<Uint8List>(
+                        future: channelController.getImage(imageUrl),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(
+                                child: Text(
+                                    'Error loading image: ${snapshot.error}'));
+                          } else if (snapshot.hasData) {
+                            try {
+                              return Card(
+                                child: Column(
+                                  children: [
+                                    Image.memory(snapshot.data!),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(title),
+                                    ),
+                                  ],
+                                ),
                               );
-                            },
-                            child: FutureBuilder<Uint8List>(
-                              future: channelController.getImage(imageUrl),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Center(
-                                      child: CircularProgressIndicator());
-                                } else if (snapshot.hasError) {
-                                  return Center(
-                                      child: Text(
-                                          'Error loading image: ${snapshot.error}'));
-                                } else if (snapshot.hasData) {
-                                  try {
-                                    return Card(
-                                      child: Column(
-                                        children: [
-                                          Image.memory(snapshot.data!),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(title),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  } catch (e) {
-                                    return Center(
-                                        child:
-                                            Text('Failed to load image: $e'));
-                                  }
-                                } else {
-                                  return const Center(
-                                      child: Text('No image available'));
-                                }
-                              },
-                            ),
-                          );
+                            } catch (e) {
+                              return Center(
+                                  child: Text('Failed to load image: $e'));
+                            }
+                          } else {
+                            return const Center(
+                                child: Text('No image available'));
+                          }
                         },
-                      );
-                    },
-                    childCount: 1,
-                  ),
+                      ),
+                    );
+                  },
                 ),
-        ]),
+              ),
+          ],
+        ),
       );
     });
   }

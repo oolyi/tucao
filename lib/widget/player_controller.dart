@@ -34,6 +34,8 @@ class VideoPlayerController extends GetxController {
   RxBool playing = true.obs;
   RxDouble playerSpeed = 1.0.obs;
 
+  RxDouble aspectRatio = (16.0 / 9.0).obs; // 默认比例为16:9
+
   Map<int, List<DanmakuContentItem>> _danmuItems = {};
 
   @override
@@ -48,7 +50,49 @@ class VideoPlayerController extends GetxController {
       debugPrint(player.state.playlist.toString());
       debugPrint(Get.arguments['hid']);
     });
+
+    /*
+    动态调整播放器区域，以适应更多视频比例
+    
+    bool widthUpdated = false;
+    bool heightUpdated = false;
+    RxDouble videoWidth = 0.0.obs;
+    RxDouble videoHeight = 0.0.obs;
+    // 监听宽度的变化
+    
+    player.stream.width.listen((w) {
+      videoWidth.value = w!.toDouble();
+      widthUpdated = true;
+      // 如果宽度和高度都更新了，则更新宽高比
+      if (widthUpdated && heightUpdated) {
+        updateAspectRatio();
+        // 重置标志
+        widthUpdated = false;
+        heightUpdated = false;
+      }
+    });
+
+    // 监听高度的变化
+    player.stream.height.listen((h) {
+      videoHeight.value = h!.toDouble();
+      heightUpdated = true;
+      // 如果宽度和高度都更新了，则更新宽高比
+      if (widthUpdated && heightUpdated) {
+        updateAspectRatio();
+        // 重置标志
+        widthUpdated = false;
+        heightUpdated = false;
+      }
+    });*/
   }
+
+  /*
+  // 更新宽高比
+  void updateAspectRatio() {
+    if (videoWidth.value != 0 && videoHeight.value != 0) {
+      aspectRatio.value = videoWidth.value / videoHeight.value;
+    }
+  }*/
 
   void setPlayable(Playlist? playlist) {
     playable = playlist;
@@ -76,7 +120,6 @@ class VideoPlayerController extends GetxController {
   }
 
   void _playerTimer(Duration interval) async {
-    // 取消之前的定时器
     playerTimer?.cancel();
 
     void onTimerTick() async {
@@ -96,9 +139,8 @@ class VideoPlayerController extends GetxController {
       }
     }
 
-    // 启动一个新的定时器
+    //定时器，根据播放速度更新状态
     playerTimer = Timer.periodic(interval, (timer) {
-      // 更新状态
       currentPosition.value = player.state.position;
       buffered.value = player.state.buffer;
       duration.value = player.state.duration;
