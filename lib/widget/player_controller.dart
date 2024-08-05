@@ -28,7 +28,6 @@ class VideoPlayerController extends GetxController {
   Timer? positionedTimer;
   Timer? playerTimer;
 
-
   Rx<Duration> currentPosition = Duration.zero.obs;
   Rx<Duration> buffered = Duration.zero.obs;
   Rx<Duration> duration = Duration.zero.obs;
@@ -40,7 +39,7 @@ class VideoPlayerController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    _playerTimer();
+    _playerTimer(Duration(milliseconds: (1000 / playerSpeed.value).toInt()));
     var danmustring =
         await NetUtils().getDanmaku(Get.arguments['hid'], part.toString());
     _danmuItems = parseTucaoDanmu(danmustring);
@@ -64,7 +63,6 @@ class VideoPlayerController extends GetxController {
           .setProperty('http-proxy', Global.siteConfig!["proxy"]);
     }
     await player.open(playable!, play: true);
-
   }
 
   void jumpToIndex(int index) async {
@@ -77,10 +75,12 @@ class VideoPlayerController extends GetxController {
     _danmuItems = parseTucaoDanmu(danmustring);
   }
 
-  //是否需要根据播放数据调整定时器的频率，确保视频播放的每一秒都有相应的响应
-  void _playerTimer() async {
+  void _playerTimer(Duration interval) async {
+    // 取消之前的定时器
+    playerTimer?.cancel();
+
     void onTimerTick() async {
-      if (!danmakuController.running || !danmakuOn.value ) {
+      if (!danmakuController.running || !danmakuOn.value) {
         return;
       }
       int seconds = currentPosition.value.inSeconds;
@@ -88,13 +88,17 @@ class VideoPlayerController extends GetxController {
         _danmuItems[seconds]!.asMap().forEach((idx, ele) async {
           await Future.delayed(
               Duration(
-                  milliseconds: idx * 1000 ~/ _danmuItems[seconds]!.length),
+                  milliseconds: idx *
+                      interval.inMilliseconds ~/
+                      _danmuItems[seconds]!.length),
               () => {danmakuController.addDanmaku(ele)});
         });
       }
     }
 
-    playerTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    // 启动一个新的定时器
+    playerTimer = Timer.periodic(interval, (timer) {
+      // 更新状态
       currentPosition.value = player.state.position;
       buffered.value = player.state.buffer;
       duration.value = player.state.duration;
@@ -156,10 +160,10 @@ class VideoPlayerController extends GetxController {
   Future<void> playOrPause() async {
     await player.playOrPause();
     if (player.state.playing) {
-      danmakuController.pause();
+      danmakuController.resume();
       playing.value = false;
     } else {
-      danmakuController.resume();
+      danmakuController.pause();
       playing.value = true;
     }
   }
@@ -167,6 +171,9 @@ class VideoPlayerController extends GetxController {
   Future setPlaybackSpeed(double playerSpeed) async {
     try {
       player.setRate(playerSpeed);
+      if (playerSpeed != this.playerSpeed.value) {
+        _playerTimer(Duration(milliseconds: (1000 / playerSpeed).toInt()));
+      }
       this.playerSpeed.value = playerSpeed;
     } catch (e) {
       debugPrint(e.toString());
